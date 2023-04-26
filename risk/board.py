@@ -1,6 +1,8 @@
 import os
 import random
-from collections import namedtuple
+from collections import namedtuple, deque
+
+import heapdict
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -14,12 +16,9 @@ Move = namedtuple('Attack', ['from_territory_id', 'from_armies', 'to_territory_i
 
 class Board(object):
     """
-    !The Board object keeps track of all armies situated on the Risk
+    The Board object keeps track of all armies situated on the Risk
     world map. Through the definitions it knows the locations of and
-    connections between all territories. It handles ownership, attacks
-    and movements of armies.
-
-    Args:
+    co:
         data (list): a sorted list of tuples describing the state of the
             board, each containing three values:
             - tid (int): the territory id of a territory,
@@ -49,15 +48,9 @@ class Board(object):
     # ====================== #
     # == Neighbor Methods == #
     # ====================== #   
-
     def neighbors(self, territory_id):
         """
-        Create a generator of all territories neighboring a given territory.
-            
-        Args:
-            territory_id (int): ID of the territory to find neighbors of.
-
-        Returns:
+        Create a generator of all territories neighboring a given terri  Returns:
             generator: Generator of Territories.
         """
         neighbor_ids = risk.definitions.territory_neighbors[territory_id]
@@ -81,9 +74,7 @@ class Board(object):
     def friendly_neighbors(self, territory_id):
         """
         Create a generator of all territories neighboring a given territory, of which
-        the owner is the same as the owner of the original territory.
-
-        Args:
+        the owner is the same as the owner of the origin
             territory_id (int): ID of the territory.
 
         Returns:
@@ -106,8 +97,7 @@ class Board(object):
         Valid paths can be of any length (including 0 and 1).
 
         Args:
-            path ([int]): a list of territory_ids which represent the path
-
+            path ([int]): a list of territ
         Returns:
             bool: True if the input path is valid
         '''
@@ -125,8 +115,7 @@ class Board(object):
         The rules of Risk state that when attacking, 
         a player's armies cannot move through territories they already occupy;
         they must move through enemy territories.
-        All valid attacks, therefore, will follow a path of starting on one player's territory and moving trough enemy territories.
-
+        All valid attacks, therefore, will follow a path of startin
         Formally, an attack path is a valid path satisfying the following two additional properties:
         1. An attack path must contain at least two territories;
         1. If the first territory is owned by player A, then no other territories in the path are also owned by A.
@@ -155,10 +144,11 @@ class Board(object):
         Returns:
             bool: the number of enemy armies in the path
         '''
-        army = 0
-        for territory in path[1:]:
-            army += self.armies(territory)
-        return army
+        total_armies = 0
+        for i in path[1:]:
+            total_armies += self.armies(i)
+        return total_armies
+
 
     def shortest_path(self, source, target):
         '''
@@ -196,15 +186,13 @@ class Board(object):
                         queue.append(territory)
                     visited.add(territory)
 
-
     def can_fortify(self, source, target):
         '''
         At the end of a turn, a player may choose to fortify a target territory by moving armies from a source territory.
         In order for this to be a valid move,
         there must be a valid path between the source and target territories that is owned entirely by the same player.
 
-        Args:
-            source (int): the source territory_id
+    
             target (int): the target territory_id
 
         Returns:
@@ -400,10 +388,7 @@ class Board(object):
 
     def possible_fortifications(self, player_id):
         """
-        Assemble a list of all possible fortifications for the players.
-        
-        Args:
-            player_id (int): ID of the attacking player.
+        Assemble a list of        player_id (int): ID of the attacking player.
 
         Returns:
             list: List of Moves.
